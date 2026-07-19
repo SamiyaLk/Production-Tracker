@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Furniture Production Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root, [data-theme="light"] {
+    --bg: #F2EAD9;
+    --bg-elev: #FFFDF8;
+    --bg-elev-2: #ECE0C7;
+    --text: #241A10;
+    --text-muted: #6E5D46;
+    --border: #D9C7A3;
+    --accent: #A8752E;
+    --accent-strong: #7A4E1C;
+    --accent-soft: #EFDBAF;
+    --accent-ink: #6B4718;
+    --success: #4F7A4A;
+    --success-strong: #3A5E35;
+    --success-soft: #DCE8D3;
+    --success-ink: #375A34;
+    --danger: #A6432F;
+    --danger-strong: #7E2E1E;
+    --danger-soft: #F1DAD1;
+    --danger-ink: #7E2E1E;
+    --shadow: 0 2px 10px rgba(36,26,16,0.10);
+    --shadow-lg: 0 12px 40px rgba(36,26,16,0.22);
+    --hole: #E4D4AE;
+    --overlay: rgba(27,19,10,0.55);
+  }
+  [data-theme="dark"] {
+    --bg: #1B1712;
+    --bg-elev: #241F18;
+    --bg-elev-2: #2E271D;
+    --text: #F1E7D4;
+    --text-muted: #B39F82;
+    --border: #3E3323;
+    --accent: #D9A15A;
+    --accent-strong: #C88A3E;
+    --accent-soft: #4A3A22;
+    --accent-ink: #F2C88F;
+    --success: #7FA36F;
+    --success-strong: #6B9159;
+    --success-soft: #33402A;
+    --success-ink: #A9C89A;
+    --danger: #D9765F;
+    --danger-strong: #C15A42;
+    --danger-soft: #452A22;
+    --danger-ink: #EFA391;
+    --shadow: 0 4px 18px rgba(0,0,0,0.45);
+    --shadow-lg: 0 20px 60px rgba(0,0,0,0.55);
+    --hole: #14110D;
+    --overlay: rgba(0,0,0,0.65);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    transition: background .2s ease, color .2s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+
+  button { font-family: inherit; cursor: pointer; }
+  input, select { font-family: inherit; }
+
+  .font-display { font-family: 'Fjalla One', 'Arial Narrow', sans-serif; }
+  .font-mono { font-family: 'IBM Plex Mono', 'Courier New', monospace; }
+
+  #app { max-width: 1100px; margin: 0 auto; padding-bottom: 60px; }
+
+  .topbar {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding: 26px 20px 6px;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand-emoji { font-size: 30px; line-height:1; }
+  .brand-text-title { font-size: 21px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .brand-text-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; margin-top:2px; }
+  .topbar-actions { display:flex; gap:8px; }
+
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg-elev);
+    color: var(--text); display:flex; align-items:center; justify-content:center;
+    font-size: 17px; box-shadow: var(--shadow); transition: transform .12s ease;
+  }
+  .icon-btn:hover { transform: translateY(-1px); }
+  .icon-btn:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  .stats-strip { display:flex; gap:10px; padding: 14px 20px 4px; flex-wrap:wrap; }
+  .stat-chip {
+    background: var(--bg-elev); border:1px solid var(--border); border-radius: 10px;
+    padding: 8px 14px; font-size: 12px; color: var(--text-muted); display:flex; gap:6px; align-items:baseline;
+  }
+  .stat-chip b { font-family:'IBM Plex Mono', monospace; font-size: 15px; color: var(--text); }
+  .stat-chip.chip-warn { border-color: var(--danger); background: var(--danger-soft); color: var(--danger-ink); }
+  .stat-chip.chip-warn b { color: var(--danger-ink); }
+
+  .alert-banner {
+    margin: 10px 20px 0; background: var(--accent-soft); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .alert-banner.has-overdue { background: var(--danger-soft); border-color: var(--danger); }
+  .alert-title { font-weight:700; font-size:13px; margin-bottom:9px; display:flex; align-items:center; gap:6px; }
+  .alert-list { display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; }
+  .alert-chip {
+    flex-shrink:0; display:flex; align-items:center; gap:9px; background: var(--bg-elev);
+    border:1px solid var(--border); border-radius:10px; padding:8px 10px; cursor:pointer; min-width:210px;
+    transition: transform .12s ease;
+  }
+  .alert-chip:hover { transform: translateY(-2px); }
+  .alert-chip img, .alert-chip .achip-ph {
+    width:36px; height:36px; border-radius:8px; object-fit:cover; background: var(--bg-elev-2);
+    display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
+  }
+  .achip-name { font-size:12.5px; font-weight:600; line-height:1.25; }
+  .achip-status { font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:10px; margin-top:4px; display:inline-block; }
+  .achip-status.overdue { background: var(--danger-strong); color:#fff; }
+  .achip-status.due-today { background: var(--accent-strong); color:#fff; }
+
+  .toolbar {
+    display:flex; gap:10px; padding: 14px 20px; flex-wrap: wrap; align-items:center;
+  }
+  .search-wrap { position:relative; flex: 1 1 220px; min-width: 180px; }
+  .search-wrap span { position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.6; font-size:14px; }
+  .search-input {
+    width:100%; padding: 10px 12px 10px 34px; border-radius: 9px; border:1px solid var(--border);
+    background: var(--bg-elev); color: var(--text);
+  }
+  .filter-select {
+    padding: 10px 12px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--bg-elev); color: var(--text);
+  }
+  .btn-primary {
+    background: var(--accent-strong); color: #FFF8EC; border: none; border-radius: 9px;
+    padding: 10px 16px; font-weight:600; font-size:13.5px; letter-spacing:.02em;
+    box-shadow: var(--shadow); display:flex; align-items:center; gap:6px; white-space:nowrap;
+    transition: transform .12s ease;
+  }
+  .btn-primary:hover { transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--bg-elev); color: var(--text); border:1px solid var(--border); border-radius:9px;
+    padding: 10px 16px; font-weight:600; font-size:13.5px;
+  }
+  .btn-danger {
+    background: var(--danger-strong); color:#FFF3EE; border:none; border-radius:9px;
+    padding: 10px 16px; font-weight:600; font-size:13.5px;
+  }
+
+  .grid {
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px; padding: 12px 20px 40px;
+  }
+  .card {
+    background: var(--bg-elev); border:1px solid var(--border); border-radius:14px;
+    overflow: visible; position:relative; box-shadow: var(--shadow);
+    transition: transform .15s ease, box-shadow .15s ease;
+    cursor:pointer; display:flex; flex-direction:column;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .card-hole {
+    position:absolute; top:-7px; left:26px; width:14px; height:14px; border-radius:50%;
+    background: var(--bg); border:1px solid var(--border); z-index:3;
+  }
+  .card-photo-wrap { position:relative; border-radius:14px 14px 0 0; overflow:hidden; }
+  .card-photo {
+    width:100%; aspect-ratio: 4/3; object-fit:cover; display:block; background: var(--bg-elev-2);
+  }
+  .card-photo-placeholder {
+    width:100%; aspect-ratio:4/3; display:flex; align-items:center; justify-content:center;
+    font-size:40px; background: var(--bg-elev-2); color: var(--text-muted); opacity:.7;
+  }
+  .days-badge {
+    position:absolute; top:8px; right:8px; background: rgba(20,15,8,0.68); color:#FBF3E3;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; padding:3px 8px; border-radius:6px;
+    letter-spacing:.02em;
+  }
+  .card-body { padding: 14px; display:flex; flex-direction:column; gap:7px; flex:1; }
+  .card-name { font-size:16px; letter-spacing:.01em; line-height:1.25; }
+  .card-jobcard { font-size:10.5px; color: var(--text-muted); font-family:'IBM Plex Mono', monospace; margin-top:-4px; }
+  .stage-pill {
+    display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600;
+    padding: 4px 10px; border-radius:20px; background: var(--accent-soft); color: var(--accent-ink);
+    width:fit-content;
+  }
+  .stage-pill.delivered { background: var(--success-soft); color: var(--success-ink); }
+  .warn-pill {
+    display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700;
+    padding:3px 9px; border-radius:20px; width:fit-content;
+  }
+  .warn-pill.overdue { background: var(--danger-soft); color: var(--danger-ink); }
+  .warn-pill.due-today { background: var(--accent-soft); color: var(--accent-ink); }
+  .card-meta { font-size:12.5px; color: var(--text-muted); display:flex; flex-direction:column; gap:3px; }
+
+  .empty-state {
+    grid-column: 1 / -1; text-align:center; padding: 60px 20px; color: var(--text-muted);
+  }
+  .empty-state .e-emoji { font-size:38px; margin-bottom:10px; }
+  .empty-state .e-title { font-size:16px; color: var(--text); margin-bottom:6px; }
+
+  .modal-overlay {
+    position:fixed; inset:0; background: var(--overlay); display:flex; align-items:center;
+    justify-content:center; padding:16px; z-index:100; animation: fadeIn .15s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+  .modal {
+    background: var(--bg-elev); border-radius:16px; max-width:480px; width:100%;
+    max-height: 88vh; overflow-y:auto; padding:22px; box-shadow: var(--shadow-lg);
+    animation: popIn .16s ease;
+  }
+  @keyframes popIn { from{opacity:0; transform:scale(.97) translateY(6px);} to{opacity:1; transform:scale(1) translateY(0);} }
+  .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .modal-title { font-size:18px; letter-spacing:.02em; }
+  .modal-close { background:none; border:none; font-size:20px; color: var(--text-muted); padding:4px 8px; }
+
+  .field { margin-bottom: 14px; display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:12px; font-weight:600; color: var(--text-muted); letter-spacing:.02em; text-transform:uppercase; }
+  .field input[type="text"], .field input[type="date"], .field input[type="number"], .field select {
+    padding: 10px 12px; border-radius:8px; border:1px solid var(--border); background: var(--bg);
+    color: var(--text); font-size:14px; width:100%;
+  }
+  .field .hint { font-size:11.5px; color: var(--text-muted); }
+  .photo-upload-row { display:flex; align-items:center; gap:12px; }
+  .photo-preview {
+    width:64px; height:64px; border-radius:10px; object-fit:cover; border:1px solid var(--border);
+    background: var(--bg-elev-2);
+  }
+  .photo-preview-placeholder {
+    width:64px; height:64px; border-radius:10px; border:1px dashed var(--border); background: var(--bg-elev-2);
+    display:flex; align-items:center; justify-content:center; font-size:22px; color: var(--text-muted);
+  }
+  .form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top: 8px; }
+
+  .stamp-row { display:flex; align-items:flex-start; gap:2px; overflow-x:auto; padding: 10px 2px 4px; }
+  .stamp { display:flex; flex-direction:column; align-items:center; gap:6px; min-width:58px; position:relative; flex-shrink:0; }
+  .stamp-line {
+    position:absolute; top:18px; left:50%; width:100%; height:2px; background: var(--border); z-index:0;
+  }
+  .stamp-line.filled { background: var(--accent); }
+  .stamp-circle {
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:15px; z-index:1; background: var(--bg-elev); border:2px solid var(--border); flex-shrink:0;
+  }
+  .stamp.completed .stamp-circle { background: var(--accent); border-color: var(--accent); color:#fff; }
+  .stamp.current .stamp-circle { border-color: var(--accent); background: var(--accent-soft); animation: pulseStamp 1.8s ease-in-out infinite; }
+  @keyframes pulseStamp { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.1);} }
+  .stamp-label { font-size:9px; text-align:center; color: var(--text-muted); font-family:'IBM Plex Mono', monospace; max-width:62px; line-height:1.25; }
+  .stamp.current .stamp-label { color: var(--accent-ink); font-weight:600; }
+
+  .detail-photo { width:100%; aspect-ratio: 4/3; object-fit:cover; border-radius:12px; background: var(--bg-elev-2); margin-bottom:14px; }
+  .detail-photo-placeholder {
+    width:100%; aspect-ratio:4/3; border-radius:12px; background: var(--bg-elev-2); display:flex;
+    align-items:center; justify-content:center; font-size:46px; color: var(--text-muted); margin-bottom:14px;
+  }
+  .detail-meta-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 14px 0; }
+  .detail-meta-item { background: var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+  .detail-meta-item .k { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color: var(--text-muted); margin-bottom:3px; }
+  .detail-meta-item .v { font-size:13.5px; font-weight:600; }
+  .status-banner {
+    border-radius:10px; padding:10px 12px; font-size:13px; font-weight:600; margin: 10px 0;
+    display:flex; gap:8px; align-items:center;
+  }
+
+  .pin-dots { display:flex; justify-content:center; gap:14px; margin: 10px 0 18px; }
+  .pin-dot { width:16px; height:16px; border-radius:50%; border:2px solid var(--border); background:transparent; transition: background .1s ease, border-color .1s ease; }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+  .pin-error { text-align:center; color: var(--danger); font-size:12.5px; min-height:18px; margin-bottom:6px; }
+  .pin-hint { text-align:center; color: var(--text-muted); font-size:11.5px; margin-bottom: 10px; }
+  .numpad { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; max-width:260px; margin: 0 auto; }
+  .numpad button {
+    padding: 16px 0; border-radius:12px; border:1px solid var(--border); background: var(--bg);
+    color: var(--text); font-size:18px; font-family:'IBM Plex Mono', monospace;
+  }
+  .numpad button:active { background: var(--accent-soft); }
+  .numpad .np-clear { color: var(--danger); font-size:14px; }
+
+  .settings-section { margin-bottom: 22px; }
+  .settings-section h3 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color: var(--text-muted); margin: 0 0 10px; }
+  .list-row {
+    display:flex; justify-content:space-between; align-items:center; padding: 8px 10px;
+    background: var(--bg); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; font-size:13.5px;
+  }
+  .list-row button { background:none; border:none; color: var(--danger); font-size:15px; padding:2px 6px; }
+  .add-row { display:flex; gap:8px; margin-top: 8px; }
+  .add-row input { flex:1; padding: 9px 11px; border-radius:8px; border:1px solid var(--border); background: var(--bg-elev); color: var(--text); }
+  .add-row button { padding: 9px 14px; border-radius:8px; border:none; background: var(--accent-strong); color:#FFF8EC; font-weight:600; font-size:13px; }
+  .empty-list-note { font-size:12px; color: var(--text-muted); font-style: italic; padding: 4px 2px; }
+
+  .stage-row { display:flex; align-items:center; gap:6px; padding:6px 8px; background: var(--bg); border:1px solid var(--border); border-radius:8px; margin-bottom:6px; }
+  .stage-row .emoji-input { width:42px; text-align:center; padding:6px 2px; border-radius:6px; border:1px solid var(--border); background: var(--bg-elev); color:var(--text); font-size:15px; }
+  .stage-row .name-input { flex:1; padding:6px 8px; border-radius:6px; border:1px solid var(--border); background: var(--bg-elev); color:var(--text); font-size:13px; min-width:0; }
+  .stage-row .stage-btns { display:flex; gap:3px; flex-shrink:0; }
+  .stage-row .stage-btns button { width:26px; height:26px; border-radius:6px; border:1px solid var(--border); background:var(--bg-elev); color:var(--text); font-size:12px; display:flex; align-items:center; justify-content:center; }
+  .stage-row .stage-btns button:disabled { opacity:.35; cursor:default; }
+  .stage-row .stage-btns button.danger { color: var(--danger); }
+  .add-stage-row { display:flex; gap:6px; margin-top:8px; }
+  .add-stage-row .emoji-input { width:46px; text-align:center; padding:8px 2px; border-radius:8px; border:1px solid var(--border); background: var(--bg-elev); color:var(--text); font-size:15px; }
+  .add-stage-row .name-input2 { flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background: var(--bg-elev); color:var(--text); font-size:13px; min-width:0; }
+  .add-stage-row button { padding: 8px 14px; border-radius:8px; border:none; background: var(--accent-strong); color:#FFF8EC; font-weight:600; font-size:13px; white-space:nowrap; }
+
+  .toast {
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background: var(--bg-elev);
+    border:1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius:10px;
+    box-shadow: var(--shadow-lg); font-size:13px; z-index:200; animation: fadeIn .15s ease;
+  }
+
+  .loading-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 100px 20px; color: var(--text-muted); gap:10px; }
+  .spinner { width:28px; height:28px; border-radius:50%; border:3px solid var(--border); border-top-color: var(--accent); animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="loading-wrap" id="loadingWrap">
+    <div class="spinner"></div>
+    <div>Loading the shop floor board…</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const DEFAULT_STAGES = [
+    { id:'not_started', label:'Not Started', emoji:'⚪' },
+    { id:'structure', label:'Structure Completion', emoji:'🔨' },
+    { id:'semi_finished', label:'Semi Finished', emoji:'🪵' },
+    { id:'finishing', label:'Finishing', emoji:'✨' },
+    { id:'spray', label:'Spray', emoji:'🎨' },
+    { id:'cushioning', label:'Cushioning', emoji:'🛋️' },
+    { id:'final_delivery', label:'Final Delivery', emoji:'✅' }
+  ];
+
+  let items = [];
+  let config = { workers: [], locations: [], stages: [], pin: '1234' };
+  let theme = 'light';
+  let unlocked = false;
+  let search = '';
+  let stageFilter = 'all';
+  let pendingPinAction = null;
+  let pinBuffer = '';
+  let editingId = null;
+  let pendingPhoto = null;
+  let deleteTargetId = null;
+
+  const app = document.getElementById('app');
+
+  function esc(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function uid() { return 'itm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+  function stageUid() { return 'stage_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function todayStr() { return new Date().toISOString().slice(0,10); }
+  function formatDatePretty(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+  function daysBetween(startStr, endStr) {
+    if (!startStr) return 0;
+    const start = new Date(startStr + 'T00:00:00');
+    const end = endStr ? new Date(endStr + 'T00:00:00') : new Date(new Date().toDateString());
+    return Math.max(Math.round((end - start) / 86400000), 0);
+  }
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2600);
+  }
+
+  function stageIndexOf(stageId) { return config.stages.findIndex(s => s.id === stageId); }
+  function stageById(stageId) { return config.stages.find(s => s.id === stageId) || config.stages[0]; }
+  function isFinalStageId(stageId) {
+    return config.stages.length > 0 && config.stages[config.stages.length - 1].id === stageId;
+  }
+  function expectedDateStr(item) {
+    if (!item.jobCardDate || item.expectedDays === null || item.expectedDays === undefined || item.expectedDays === '') return null;
+    const d = new Date(item.jobCardDate + 'T00:00:00');
+    d.setDate(d.getDate() + Number(item.expectedDays));
+    return d.toISOString().slice(0,10);
+  }
+  function dueStatus(item) {
+    if (isFinalStageId(item.stageId)) return null;
+    const exp = expectedDateStr(item);
+    if (!exp) return null;
+    const diff = Math.round((new Date(todayStr()+'T00:00:00') - new Date(exp+'T00:00:00')) / 86400000);
+    if (diff > 0) return { type:'overdue', days: diff };
+    if (diff === 0) return { type:'due-today', days: 0 };
+    return null;
+  }
+  function computeAlerts() {
+    return items.map(it => ({ item: it, status: dueStatus(it) }))
+      .filter(x => x.status)
+      .sort((a,b) => b.status.days - a.status.days);
+  }
+
+  async function loadKey(key, shared) {
+    try {
+      const res = await window.storage.get(key, shared);
+      return res ? res.value : null;
+    } catch (e) { return null; }
+  }
+  async function saveItems() {
+    try {
+      const res = await window.storage.set('ftp_items', JSON.stringify(items), true);
+      if (!res) showToast("Couldn't save — try again.");
+    } catch (e) { showToast("Couldn't save — check connection."); }
+  }
+  async function saveConfig() {
+    try {
+      const res = await window.storage.set('ftp_config', JSON.stringify(config), true);
+      if (!res) showToast("Couldn't save settings — try again.");
+    } catch (e) { showToast("Couldn't save settings — check connection."); }
+  }
+  async function saveTheme() {
+    try { await window.storage.set('ftp_theme', theme, false); } catch (e) {}
+  }
+
+  async function init() {
+    const [itemsRaw, configRaw, themeRaw] = await Promise.all([
+      loadKey('ftp_items', true),
+      loadKey('ftp_config', true),
+      loadKey('ftp_theme', false)
+    ]);
+    if (itemsRaw) { try { items = JSON.parse(itemsRaw); } catch(e) { items = []; } }
+    if (configRaw) {
+      try { config = Object.assign({workers:[],locations:[],stages:[],pin:'1234'}, JSON.parse(configRaw)); } catch(e) {}
+    }
+    let configChanged = false;
+    if (!config.stages || config.stages.length === 0) {
+      config.stages = DEFAULT_STAGES.map(s => Object.assign({}, s));
+      configChanged = true;
+    }
+
+    let itemsChanged = false;
+    items.forEach(it => {
+      if (it.startDate && !it.jobCardDate) { it.jobCardDate = it.startDate; delete it.startDate; itemsChanged = true; }
+      if (typeof it.stage === 'number' && !it.stageId) {
+        const s = config.stages[it.stage];
+        it.stageId = s ? s.id : config.stages[0].id;
+        delete it.stage; itemsChanged = true;
+      }
+      if (!it.stageId) { it.stageId = config.stages[0].id; itemsChanged = true; }
+      if (it.expectedDays === undefined) { it.expectedDays = null; itemsChanged = true; }
+      if (it.jobCardNumber === undefined) { it.jobCardNumber = ''; itemsChanged = true; }
+    });
+
+    if (themeRaw === 'light' || themeRaw === 'dark') theme = themeRaw;
+    document.documentElement.setAttribute('data-theme', theme);
+
+    if (configChanged) await saveConfig();
+    if (itemsChanged) await saveItems();
+
+    render();
+  }
+
+  function requirePin(action) {
+    if (unlocked) { action(); return; }
+    pendingPinAction = action;
+    pinBuffer = '';
+    openPinModal();
+  }
+  function openPinModal() {
+    closeModal();
+    const defaultHint = config.pin === '1234' ? '<div class="pin-hint">Default PIN is 1234 until changed in Settings</div>' : '';
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'pinOverlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:340px; text-align:center;">
+        <div class="modal-header">
+          <div class="modal-title font-display">🔒 Enter PIN</div>
+          <button class="modal-close" data-action="closePin" aria-label="Close">✕</button>
+        </div>
+        <div class="pin-dots" id="pinDots">
+          ${[0,1,2,3].map(() => '<div class="pin-dot"></div>').join('')}
+        </div>
+        <div class="pin-error" id="pinError"></div>
+        <div class="numpad">
+          ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-action="pinDigit" data-digit="${n}">${n}</button>`).join('')}
+          <button class="np-clear" data-action="pinClear">Clear</button>
+          <button data-action="pinDigit" data-digit="0">0</button>
+          <button data-action="pinBack">⌫</button>
+        </div>
+        ${defaultHint}
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) { pendingPinAction = null; closeModal(); } });
+  }
+  function updatePinDots() {
+    const dots = document.querySelectorAll('#pinDots .pin-dot');
+    dots.forEach((d,i) => d.classList.toggle('filled', i < pinBuffer.length));
+  }
+  function handlePinDigit(d) {
+    if (pinBuffer.length >= 4) return;
+    pinBuffer += d;
+    updatePinDots();
+    if (pinBuffer.length === 4) {
+      if (pinBuffer === config.pin) {
+        unlocked = true;
+        const action = pendingPinAction; pendingPinAction = null;
+        closeModal();
+        if (action) action();
+      } else {
+        document.getElementById('pinError').textContent = 'Incorrect PIN — ask whoever manages entries.';
+        pinBuffer = '';
+        setTimeout(updatePinDots, 80);
+      }
+    }
+  }
+
+  function closeModal() {
+    document.querySelectorAll('.modal-overlay').forEach(el => el.remove());
+  }
+
+  function render() {
+    const alerts = computeAlerts();
+    const total = items.length;
+    const delivered = items.filter(i => isFinalStageId(i.stageId)).length;
+    const inProgress = total - delivered;
+
+    app.innerHTML = `
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-emoji">🪑</div>
+          <div>
+            <div class="brand-text-title font-display">Furniture Production Tracker</div>
+            <div class="brand-text-sub font-mono">SHOP FLOOR STATUS BOARD</div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-btn" data-action="toggleTheme" aria-label="Toggle dark mode">${theme === 'light' ? '🌙' : '☀️'}</button>
+          <button class="icon-btn" data-action="openSettings" aria-label="Settings">⚙️</button>
+        </div>
+      </div>
+
+      ${alerts.length ? `
+      <div class="alert-banner ${alerts.some(a=>a.status.type==='overdue') ? 'has-overdue' : ''}">
+        <div class="alert-title">⏰ Needs Attention — ${alerts.length} item${alerts.length===1?'':'s'} due or overdue</div>
+        <div class="alert-list">${alerts.map(a => alertChipHtml(a.item, a.status)).join('')}</div>
+      </div>` : ''}
+
+      <div class="stats-strip">
+        <div class="stat-chip">Total <b>${total}</b></div>
+        <div class="stat-chip">In Production <b>${inProgress}</b></div>
+        <div class="stat-chip">Delivered <b>${delivered}</b></div>
+        <div class="stat-chip ${alerts.length ? 'chip-warn' : ''}">Needs Attention <b>${alerts.length}</b></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span>🔍</span>
+          <input class="search-input" id="searchInput" type="text" placeholder="Search by name, worker, location…" value="${esc(search)}">
+        </div>
+        <select class="filter-select" id="stageFilterSelect">
+          <option value="all" ${stageFilter==='all'?'selected':''}>All stages</option>
+          ${config.stages.map(s => `<option value="${s.id}" ${String(stageFilter)===String(s.id)?'selected':''}>${s.emoji} ${esc(s.label)}</option>`).join('')}
+        </select>
+        <button class="btn-primary" data-action="addItem">➕ Add Item</button>
+      </div>
+
+      <div class="grid" id="grid"></div>
+    `;
+
+    document.getElementById('searchInput').addEventListener('input', (e) => { search = e.target.value; renderGrid(); });
+    document.getElementById('stageFilterSelect').addEventListener('change', (e) => { stageFilter = e.target.value; renderGrid(); });
+
+    renderGrid();
+  }
+
+  function alertChipHtml(item, status) {
+    const photo = item.photo ? `<img src="${item.photo}" alt="">` : `<div class="achip-ph">🪑</div>`;
+    const label = status.type === 'due-today' ? 'Due Today' : `Overdue ${status.days}d`;
+    const cls = status.type === 'due-today' ? 'due-today' : 'overdue';
+    return `<div class="alert-chip" data-action="openDetail" data-id="${item.id}">
+      ${photo}
+      <div>
+        <div class="achip-name">${esc(item.name)}</div>
+        <span class="achip-status ${cls}">${label}</span>
+      </div>
+    </div>`;
+  }
+
+  function filteredItems() {
+    const q = search.trim().toLowerCase();
+    return items.filter(it => {
+      if (stageFilter !== 'all' && String(it.stageId) !== String(stageFilter)) return false;
+      if (!q) return true;
+      return (it.name||'').toLowerCase().includes(q) ||
+             (it.worker||'').toLowerCase().includes(q) ||
+             (it.location||'').toLowerCase().includes(q) ||
+             (it.jobCardNumber||'').toLowerCase().includes(q);
+    }).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('grid');
+    const list = filteredItems();
+    if (list.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="e-emoji">🪵</div>
+          <div class="e-title">${items.length === 0 ? 'No items on the board yet' : 'Nothing matches that search'}</div>
+          <div>${items.length === 0 ? 'Tap "Add Item" to start tracking a piece.' : 'Try a different search or stage filter.'}</div>
+        </div>`;
+      return;
+    }
+    grid.innerHTML = list.map(cardHtml).join('');
+  }
+
+  function cardHtml(item) {
+    const stage = stageById(item.stageId);
+    const delivered = isFinalStageId(item.stageId);
+    const days = daysBetween(item.jobCardDate, delivered ? item.deliveryDate : null);
+    const photo = item.photo
+      ? `<img class="card-photo" src="${item.photo}" alt="${esc(item.name)}">`
+      : `<div class="card-photo-placeholder">🪑</div>`;
+    const status = dueStatus(item);
+    const warnPill = status
+      ? `<div class="warn-pill ${status.type}">${status.type==='due-today' ? '⏰ Due Today' : `⚠️ Overdue ${status.days}d`}</div>`
+      : '';
+    return `
+      <div class="card" data-action="openDetail" data-id="${item.id}">
+        <div class="card-hole"></div>
+        <div class="card-photo-wrap">
+          ${photo}
+          <div class="days-badge">⏱ ${days}d</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">${esc(item.name)}</div>
+          ${item.jobCardNumber ? `<div class="card-jobcard">🎫 ${esc(item.jobCardNumber)}</div>` : ''}
+          <div class="stage-pill ${delivered ? 'delivered' : ''}">${stage.emoji} ${esc(stage.label)}</div>
+          ${warnPill}
+          <div class="card-meta">
+            <div>📍 ${item.location ? esc(item.location) : '<span style="opacity:.6">Not set</span>'}</div>
+            <div>👷 ${item.worker ? esc(item.worker) : '<span style="opacity:.6">Unassigned</span>'}</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function openDetail(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    closeModal();
+    const delivered = isFinalStageId(item.stageId);
+    const days = daysBetween(item.jobCardDate, delivered ? item.deliveryDate : null);
+    const photo = item.photo
+      ? `<img class="detail-photo" src="${item.photo}" alt="${esc(item.name)}">`
+      : `<div class="detail-photo-placeholder">🪑</div>`;
+    const status = dueStatus(item);
+    const exp = expectedDateStr(item);
+
+    let banner = '';
+    if (delivered) {
+      banner = `<div class="status-banner" style="background:var(--success-soft);color:var(--success-ink);">✅ Delivered to ${esc(item.location || 'destination')} on ${formatDatePretty(item.deliveryDate)}</div>`;
+    } else if (status && status.type === 'overdue') {
+      banner = `<div class="status-banner" style="background:var(--danger-soft);color:var(--danger-ink);">⚠️ Overdue by ${status.days} day${status.days===1?'':'s'} — expected ${formatDatePretty(exp)}</div>`;
+    } else if (status && status.type === 'due-today') {
+      banner = `<div class="status-banner" style="background:var(--accent-soft);color:var(--accent-ink);">⏰ Due today — expected finish was ${formatDatePretty(exp)}. Check on this item!</div>`;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title font-display">${esc(item.name)}</div>
+          <button class="modal-close" data-action="closeModal" aria-label="Close">✕</button>
+        </div>
+        ${photo}
+        ${banner}
+        <div class="stamp-row">${stampRowHtml(item.stageId)}</div>
+        <div class="detail-meta-grid">
+          <div class="detail-meta-item"><div class="k">📍 Location</div><div class="v">${item.location ? esc(item.location) : 'Not set'}</div></div>
+          <div class="detail-meta-item"><div class="k">👷 Worker</div><div class="v">${item.worker ? esc(item.worker) : 'Unassigned'}</div></div>
+          <div class="detail-meta-item"><div class="k">⏱ Days in Production</div><div class="v">${days} day${days===1?'':'s'}</div></div>
+          <div class="detail-meta-item"><div class="k">🎫 Job Card #</div><div class="v">${item.jobCardNumber ? esc(item.jobCardNumber) : '—'}</div></div>
+          <div class="detail-meta-item"><div class="k">Job Card Date</div><div class="v">${item.jobCardDate ? formatDatePretty(item.jobCardDate) : '—'}</div></div>
+          <div class="detail-meta-item"><div class="k">Expected Finish</div><div class="v">${exp ? formatDatePretty(exp) : '—'}</div></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-danger" data-action="deleteItem" data-id="${item.id}">🗑 Delete</button>
+          <button class="btn-primary" data-action="editItem" data-id="${item.id}">✏️ Edit</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  }
+
+  function stampRowHtml(currentStageId) {
+    const currentIdx = stageIndexOf(currentStageId);
+    return config.stages.map((s, idx) => {
+      const state = idx < currentIdx ? 'completed' : (idx === currentIdx ? 'current' : '');
+      const lineFilled = idx < currentIdx ? 'filled' : '';
+      const isLast = idx === config.stages.length - 1;
+      return `
+        <div class="stamp ${state}">
+          ${!isLast ? `<div class="stamp-line ${lineFilled}"></div>` : ''}
+          <div class="stamp-circle">${state === 'completed' ? '✓' : s.emoji}</div>
+          <div class="stamp-label">${esc(s.label)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function openItemForm(id) {
+    editingId = id || null;
+    const item = editingId ? items.find(i => i.id === editingId) : null;
+    pendingPhoto = item ? item.photo : null;
+    closeModal();
+
+    const defaultStageId = config.stages.length ? config.stages[0].id : '';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title font-display">${item ? 'Edit Item' : 'Add Item'}</div>
+          <button class="modal-close" data-action="closeModal" aria-label="Close">✕</button>
+        </div>
+        <div class="field">
+          <label>Photo</label>
+          <div class="photo-upload-row">
+            <div id="photoPreviewWrap">${photoPreviewHtml()}</div>
+            <input type="file" id="photoInput" accept="image/*" style="display:none">
+            <button type="button" class="btn-secondary" id="photoPickBtn">📷 Choose Photo</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Item Name</label>
+          <input type="text" id="fName" placeholder="e.g. Teak Dining Table #12" value="${item ? esc(item.name) : ''}">
+        </div>
+        <div class="field">
+          <label>Job Card Number</label>
+          <input type="text" id="fJobCard" placeholder="e.g. JC-0231" value="${item ? esc(item.jobCardNumber||'') : ''}">
+        </div>
+        <div class="field">
+          <label>Job Card Issued Date</label>
+          <input type="date" id="fJobCardDate" value="${item ? (item.jobCardDate||'') : todayStr()}">
+        </div>
+        <div class="field">
+          <label>Expected Days to Complete</label>
+          <input type="number" min="0" id="fExpectedDays" placeholder="e.g. 14" value="${item && item.expectedDays!=null ? item.expectedDays : ''}">
+          <div class="hint" id="expectedPreview"></div>
+        </div>
+        <div class="field">
+          <label>Stage</label>
+          <select id="fStage">
+            ${config.stages.map(s => `<option value="${s.id}" ${(item ? item.stageId===s.id : s.id===defaultStageId) ? 'selected':''}>${s.emoji} ${esc(s.label)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Location</label>
+          <select id="fLocation">
+            <option value="">— Not set —</option>
+            ${config.locations.map(l => `<option value="${esc(l)}" ${item && item.location===l ? 'selected':''}>${esc(l)}</option>`).join('')}
+          </select>
+          ${config.locations.length===0 ? '<div class="hint">No locations yet — add some in ⚙️ Settings.</div>' : ''}
+        </div>
+        <div class="field">
+          <label>Assigned Worker</label>
+          <select id="fWorker">
+            <option value="">— Unassigned —</option>
+            ${config.workers.map(w => `<option value="${esc(w)}" ${item && item.worker===w ? 'selected':''}>${esc(w)}</option>`).join('')}
+          </select>
+          ${config.workers.length===0 ? '<div class="hint">No workers yet — add some in ⚙️ Settings.</div>' : ''}
+        </div>
+        <div class="form-actions">
+          <button class="btn-secondary" data-action="closeModal">Cancel</button>
+          <button class="btn-primary" data-action="submitItemForm">${item ? 'Save Changes' : 'Add Item'}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+    document.getElementById('photoPickBtn').addEventListener('click', () => document.getElementById('photoInput').click());
+    document.getElementById('photoInput').addEventListener('change', handlePhotoChange);
+    document.getElementById('fJobCardDate').addEventListener('input', refreshExpectedPreview);
+    document.getElementById('fExpectedDays').addEventListener('input', refreshExpectedPreview);
+    refreshExpectedPreview();
+  }
+
+  function refreshExpectedPreview() {
+    const jc = document.getElementById('fJobCardDate').value;
+    const daysVal = document.getElementById('fExpectedDays').value;
+    const el = document.getElementById('expectedPreview');
+    if (!jc || daysVal === '') { el.textContent = 'Enter the job card date and expected days to see the finish date.'; return; }
+    const d = new Date(jc + 'T00:00:00');
+    d.setDate(d.getDate() + parseInt(daysVal, 10));
+    el.textContent = '→ Expected finish: ' + formatDatePretty(d.toISOString().slice(0,10));
+  }
+
+  function photoPreviewHtml() {
+    return pendingPhoto
+      ? `<img class="photo-preview" src="${pendingPhoto}" alt="Preview">`
+      : `<div class="photo-preview-placeholder">🪑</div>`;
+  }
+
+  function compressImage(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      pendingPhoto = await compressImage(file, 320, 0.6);
+      document.getElementById('photoPreviewWrap').innerHTML = photoPreviewHtml();
+    } catch (err) {
+      showToast("Couldn't read that photo — try another.");
+    }
+  }
+
+  async function submitItemForm() {
+    const name = document.getElementById('fName').value.trim();
+    if (!name) { showToast('Please enter an item name.'); return; }
+    const jobCardNumber = document.getElementById('fJobCard').value.trim();
+    const jobCardDate = document.getElementById('fJobCardDate').value || todayStr();
+    const expDaysVal = document.getElementById('fExpectedDays').value;
+    const expectedDays = expDaysVal === '' ? null : parseInt(expDaysVal, 10);
+    const stageId = document.getElementById('fStage').value;
+    const location = document.getElementById('fLocation').value;
+    const worker = document.getElementById('fWorker').value;
+
+    if (editingId) {
+      const item = items.find(i => i.id === editingId);
+      const wasDelivered = isFinalStageId(item.stageId);
+      item.name = name; item.jobCardNumber = jobCardNumber; item.jobCardDate = jobCardDate;
+      item.expectedDays = expectedDays; item.stageId = stageId; item.location = location;
+      item.worker = worker; item.photo = pendingPhoto;
+      const nowDelivered = isFinalStageId(stageId);
+      if (nowDelivered && !wasDelivered) item.deliveryDate = todayStr();
+      if (!nowDelivered) item.deliveryDate = null;
+    } else {
+      const delivered = isFinalStageId(stageId);
+      items.push({
+        id: uid(), name, jobCardNumber, jobCardDate, expectedDays, stageId,
+        location, worker, photo: pendingPhoto,
+        deliveryDate: delivered ? todayStr() : null,
+        createdAt: Date.now()
+      });
+    }
+    await saveItems();
+    closeModal();
+    render();
+  }
+
+  function confirmDelete(id) {
+    deleteTargetId = id;
+    const item = items.find(i => i.id === id);
+    closeModal();
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:360px;">
+        <div class="modal-title font-display" style="margin-bottom:10px;">Delete this item?</div>
+        <div style="font-size:13.5px; color:var(--text-muted); margin-bottom:18px;">"${esc(item ? item.name : '')}" will be removed from the board. This can't be undone.</div>
+        <div class="form-actions">
+          <button class="btn-secondary" data-action="closeModal">Cancel</button>
+          <button class="btn-danger" data-action="doDelete">Delete</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  }
+  async function doDelete() {
+    items = items.filter(i => i.id !== deleteTargetId);
+    deleteTargetId = null;
+    await saveItems();
+    closeModal();
+    render();
+  }
+
+  function openSettingsModal() {
+    closeModal();
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title font-display">⚙️ Settings</div>
+          <button class="modal-close" data-action="closeModal" aria-label="Close">✕</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>🪜 Production Stages</h3>
+          <div id="stageList"></div>
+          <div class="add-stage-row">
+            <input type="text" class="emoji-input" id="newStageEmoji" placeholder="🔧" maxlength="4">
+            <input type="text" class="name-input2" id="newStageName" placeholder="New stage name">
+            <button data-action="addStage">Add</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>👷 Workers</h3>
+          <div id="workerList"></div>
+          <div class="add-row">
+            <input type="text" id="newWorker" placeholder="Add worker name">
+            <button data-action="addWorker">Add</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>📍 Locations</h3>
+          <div id="locationList"></div>
+          <div class="add-row">
+            <input type="text" id="newLocation" placeholder="Add showroom / location">
+            <button data-action="addLocation">Add</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>🔒 Change PIN</h3>
+          <div class="field"><label>Current PIN</label><input type="text" inputmode="numeric" maxlength="4" id="curPin" placeholder="••••"></div>
+          <div class="field"><label>New PIN (4 digits)</label><input type="text" inputmode="numeric" maxlength="4" id="newPin" placeholder="••••"></div>
+          <div class="field"><label>Confirm New PIN</label><input type="text" inputmode="numeric" maxlength="4" id="confirmPin" placeholder="••••"></div>
+          <div class="pin-error" id="pinChangeError"></div>
+          <button class="btn-primary" data-action="changePin">Update PIN</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+    renderStageSettingsList();
+    renderSettingsLists();
+  }
+
+  function renderStageSettingsList() {
+    const sl = document.getElementById('stageList');
+    if (!sl) return;
+    sl.innerHTML = config.stages.map((s, idx) => `
+      <div class="stage-row" data-id="${s.id}">
+        <input class="emoji-input" data-role="emoji" data-id="${s.id}" value="${esc(s.emoji)}" maxlength="4">
+        <input class="name-input" data-role="name" data-id="${s.id}" value="${esc(s.label)}">
+        <div class="stage-btns">
+          <button data-action="moveStage" data-id="${s.id}" data-dir="up" ${idx===0?'disabled':''} title="Move up">↑</button>
+          <button data-action="moveStage" data-id="${s.id}" data-dir="down" ${idx===config.stages.length-1?'disabled':''} title="Move down">↓</button>
+          <button class="danger" data-action="removeStage" data-id="${s.id}" title="Remove">✕</button>
+        </div>
+      </div>`).join('');
+    sl.querySelectorAll('[data-role="emoji"]').forEach(inp => {
+      inp.addEventListener('change', (e) => updateStageField(e.target.getAttribute('data-id'), 'emoji', e.target.value.trim() || '⚪'));
+    });
+    sl.querySelectorAll('[data-role="name"]').forEach(inp => {
+      inp.addEventListener('change', (e) => updateStageField(e.target.getAttribute('data-id'), 'label', e.target.value.trim() || 'Stage'));
+    });
+  }
+
+  async function updateStageField(id, field, value) {
+    const s = config.stages.find(x => x.id === id);
+    if (!s) return;
+    s[field] = value;
+    await saveConfig();
+    render();
+  }
+
+  async function moveStage(id, dir) {
+    const idx = config.stages.findIndex(s => s.id === id);
+    if (idx < 0) return;
+    const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= config.stages.length) return;
+    const tmp = config.stages[idx];
+    config.stages[idx] = config.stages[swapIdx];
+    config.stages[swapIdx] = tmp;
+    await saveConfig();
+    renderStageSettingsList();
+    render();
+  }
+
+  async function addStage() {
+    const emojiInp = document.getElementById('newStageEmoji');
+    const nameInp = document.getElementById('newStageName');
+    const label = nameInp.value.trim();
+    if (!label) { showToast('Enter a stage name.'); return; }
+    const emoji = emojiInp.value.trim() || '⚪';
+    config.stages.push({ id: stageUid(), label, emoji });
+    nameInp.value = ''; emojiInp.value = '';
+    await saveConfig();
+    renderStageSettingsList();
+    render();
+  }
+
+  async function removeStage(id) {
+    if (config.stages.length <= 1) { showToast('You need at least one stage.'); return; }
+    const inUse = items.some(it => it.stageId === id);
+    if (inUse) { showToast('Some items are on this stage — move them first.'); return; }
+    config.stages = config.stages.filter(s => s.id !== id);
+    await saveConfig();
+    renderStageSettingsList();
+    render();
+  }
+
+  function renderSettingsLists() {
+    const wl = document.getElementById('workerList');
+    const ll = document.getElementById('locationList');
+    if (wl) wl.innerHTML = config.workers.length
+      ? config.workers.map(w => `<div class="list-row"><span>${esc(w)}</span><button data-action="removeWorker" data-name="${esc(w)}">✕</button></div>`).join('')
+      : '<div class="empty-list-note">No workers added yet.</div>';
+    if (ll) ll.innerHTML = config.locations.length
+      ? config.locations.map(l => `<div class="list-row"><span>${esc(l)}</span><button data-action="removeLocation" data-name="${esc(l)}">✕</button></div>`).join('')
+      : '<div class="empty-list-note">No locations added yet.</div>';
+  }
+
+  async function addWorker() {
+    const input = document.getElementById('newWorker');
+    const val = input.value.trim();
+    if (!val) return;
+    if (config.workers.includes(val)) { showToast('That worker is already on the list.'); return; }
+    config.workers.push(val);
+    input.value = '';
+    await saveConfig();
+    renderSettingsLists();
+  }
+  async function removeWorker(name) {
+    config.workers = config.workers.filter(w => w !== name);
+    await saveConfig();
+    renderSettingsLists();
+  }
+  async function addLocation() {
+    const input = document.getElementById('newLocation');
+    const val = input.value.trim();
+    if (!val) return;
+    if (config.locations.includes(val)) { showToast('That location is already on the list.'); return; }
+    config.locations.push(val);
+    input.value = '';
+    await saveConfig();
+    renderSettingsLists();
+  }
+  async function removeLocation(name) {
+    config.locations = config.locations.filter(l => l !== name);
+    await saveConfig();
+    renderSettingsLists();
+  }
+  async function changePin() {
+    const cur = document.getElementById('curPin').value.trim();
+    const next = document.getElementById('newPin').value.trim();
+    const confirmVal = document.getElementById('confirmPin').value.trim();
+    const errEl = document.getElementById('pinChangeError');
+    if (cur !== config.pin) { errEl.textContent = 'Current PIN is incorrect.'; return; }
+    if (!/^\d{4}$/.test(next)) { errEl.textContent = 'New PIN must be exactly 4 digits.'; return; }
+    if (next !== confirmVal) { errEl.textContent = "New PIN and confirmation don't match."; return; }
+    config.pin = next;
+    errEl.textContent = '';
+    await saveConfig();
+    showToast('PIN updated.');
+    closeModal();
+  }
+
+  function toggleTheme() {
+    theme = theme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    saveTheme();
+    render();
+  }
+
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.getAttribute('data-action');
+    const id = el.getAttribute('data-id');
+    switch (action) {
+      case 'toggleTheme': toggleTheme(); break;
+      case 'openSettings': requirePin(openSettingsModal); break;
+      case 'addItem': requirePin(() => openItemForm(null)); break;
+      case 'openDetail': openDetail(id); break;
+      case 'editItem': requirePin(() => openItemForm(id)); break;
+      case 'deleteItem': requirePin(() => confirmDelete(id)); break;
+      case 'doDelete': doDelete(); break;
+      case 'submitItemForm': submitItemForm(); break;
+      case 'closeModal': closeModal(); break;
+      case 'closePin': pendingPinAction = null; closeModal(); break;
+      case 'pinDigit': handlePinDigit(el.getAttribute('data-digit')); break;
+      case 'pinClear': pinBuffer = ''; updatePinDots(); document.getElementById('pinError').textContent=''; break;
+      case 'pinBack': pinBuffer = pinBuffer.slice(0, -1); updatePinDots(); break;
+      case 'addWorker': addWorker(); break;
+      case 'removeWorker': removeWorker(el.getAttribute('data-name')); break;
+      case 'addLocation': addLocation(); break;
+      case 'removeLocation': removeLocation(el.getAttribute('data-name')); break;
+      case 'changePin': changePin(); break;
+      case 'addStage': addStage(); break;
+      case 'moveStage': moveStage(id, el.getAttribute('data-dir')); break;
+      case 'removeStage': removeStage(id); break;
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { pendingPinAction = null; closeModal(); }
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
